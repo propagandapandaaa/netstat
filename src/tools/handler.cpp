@@ -25,7 +25,7 @@ void printThreePairs(const std::unordered_map<std::string, PairData> &pairs)
     Adds new packets to pairs hashmap, if pair exists, bytes and packet count is incremented */
 void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet)
 {
-    auto *pairs = reinterpret_cast<std::unordered_map<std::string, struct PairData> *>(userData);
+    auto *pairs = reinterpret_cast<std::unordered_map<std::string, PairData> *>(userData);
     // std::cout << "Packet captured: length " << pkthdr->len << std::endl;
     struct ether_header *eth_header = (struct ether_header *)packet;
 
@@ -65,11 +65,13 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
         if (it != pairs->end())
         {
             it->second.packets++;
+            it->second.bytes += pkthdr->len;
         }
         else
         {
             PairData new_data;
             new_data.packets = 1;
+            new_data.bytes = pkthdr->len;
             pairs->emplace(connection_string, new_data);
         }
         // printf("Connection: %s\n", connection_string);

@@ -1,5 +1,18 @@
 #include "../include/stats.h"
 
+/* FOR TESTING ONLY */
+void printAllPairs(const std::unordered_map<std::string, PairData> &pairs)
+{
+    std::cout << "Key                | Bytes         | Packages\n";
+    std::cout << "-----------------------------------------------\n";
+    for (const auto &pair : pairs)
+    {
+        std::cout << pair.first << " | "
+                  << pair.second.bytes << " | "
+                  << pair.second.packets << '\n';
+    }
+}
+
 /* Convert const char params to enum to avoid using strcmp() */
 OrderBy setOrder(const char *order)
 {
@@ -14,12 +27,11 @@ OrderBy setOrder(const char *order)
 }
 
 /* Sorts pairs by packet count or bytes, set by the order param */
-std::vector<std::pair<std::string, PairData>> orderPairs(std::unordered_map<std::string, struct PairData> pairs, OrderBy order)
+std::vector<std::pair<std::string, PairData>> orderPairs(std::unordered_map<std::string, struct PairData> &pairs, OrderBy order)
 {
-
     std::vector<std::pair<std::string, PairData>> orderedPairs(pairs.begin(), pairs.end());
 
-    std::sort(orderedPairs.begin(), orderedPairs.end(),
+    std::sort(orderedPairs.rbegin(), orderedPairs.rend(),
               [order](const std::pair<std::string, PairData> &a, const std::pair<std::string, PairData> &b)
               {
                   if (order == bytes)
@@ -36,8 +48,9 @@ std::vector<std::pair<std::string, PairData>> orderPairs(std::unordered_map<std:
 }
 
 /* Timer function, gets packets once per second and processes them */
-void getStats(const char *orderString, std::unordered_map<std::string, struct PairData> pairs)
+void getStats(const char *orderString, std::unordered_map<std::string, struct PairData> &pairs)
 {
+
     std::unordered_map<std::string, struct PairData> pairsCopy;
 
     /* Wait for the first batch of packets */
@@ -47,7 +60,8 @@ void getStats(const char *orderString, std::unordered_map<std::string, struct Pa
 
     while (true)
     {
-        std::cout << " looping " << std::endl;
+        // printAllPairs(pairs);
+        // std::cout << " looping " << std::endl;
         const auto start = std::chrono::high_resolution_clock::now();
 
         /* indented block so that lock_guard goes out of scope */

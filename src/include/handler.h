@@ -24,6 +24,6 @@ struct PairData
     int bytes;
 };
 
-void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet);
+void packetHandler(u_char *userData, const pcap_pkthdr *pkthdr, const u_char *packet);
 
 #endif

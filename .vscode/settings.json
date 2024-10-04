@@ -61,6 +61,10 @@
         "chrono": "cpp",
         "compare": "cpp",
         "concepts": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "execution": "cpp",
+        "charconv": "cpp",
+        "__tree": "cpp",
+        "map": "cpp"
     }
 }

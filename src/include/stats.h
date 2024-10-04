@@ -14,6 +14,6 @@ enum OrderBy
     packets
 };
 
-void getStats(const char *orderString, std::unordered_map<std::string, struct PairData> pairs);
+void getStats(const char *orderString, std::unordered_map<std::string, PairData> &pairs);
 
 #endif

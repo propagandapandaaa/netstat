@@ -7,6 +7,6 @@
 #include <thread>
 #include "handler.h"
 
-void listener(const char *interface, std::unordered_map<std::string, struct PairData> pairs);
+void listener(const char *interface, std::unordered_map<std::string, PairData> &pairs);
 
 #endif
