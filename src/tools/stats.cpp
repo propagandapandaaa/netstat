@@ -1,50 +1,64 @@
 #include "../include/stats.h"
 
-/* FOR TESTING ONLY */
-void printAllPairs(const std::unordered_map<std::string, PairData> &pairs)
+/*
+TODO:
+Match SRC:DST and DST:SRC pairs
+Count total bytes/s and packets/s
+get top 10
+display
+*/
+namespace
 {
-    std::cout << "Key                | Bytes         | Packages\n";
-    std::cout << "-----------------------------------------------\n";
-    for (const auto &pair : pairs)
+    std::string splitIp(std::string)
     {
-        std::cout << pair.first << " | "
-                  << pair.second.bytes << " | "
-                  << pair.second.packets << '\n';
     }
-}
 
-/* Convert const char params to enum to avoid using strcmp() */
-OrderBy setOrder(const char *order)
-{
-    if (strcmp(order, "p") == 0)
+    /* FOR TESTING ONLY */
+    void printAllPairs(const std::unordered_map<std::string, PairData> &pairs)
     {
-        return packets;
+        std::cout << "Key                | Bytes         | Packages\n";
+        std::cout << "-----------------------------------------------\n";
+        for (const auto &pair : pairs)
+        {
+            std::cout << pair.first << " | "
+                      << pair.second.bytes << " | "
+                      << pair.second.packets << '\n';
+        }
     }
-    else
+
+    /* Convert const char params to enum to avoid using strcmp() */
+    OrderBy setOrder(const char *order)
     {
-        return bytes;
+        if (strcmp(order, "p") == 0)
+        {
+            return packets;
+        }
+        else
+        {
+            return bytes;
+        }
     }
-}
 
-/* Sorts pairs by packet count or bytes, set by the order param */
-std::vector<std::pair<std::string, PairData>> orderPairs(std::unordered_map<std::string, struct PairData> &pairs, OrderBy order)
-{
-    std::vector<std::pair<std::string, PairData>> orderedPairs(pairs.begin(), pairs.end());
+    /* Sorts pairs by packet count or bytes, set by the order param */
+    std::vector<std::pair<std::string, PairData>> orderPairs(std::unordered_map<std::string, struct PairData> &pairs, OrderBy order)
+    {
+        std::vector<std::pair<std::string, PairData>> orderedPairs(pairs.begin(), pairs.end());
 
-    std::sort(orderedPairs.rbegin(), orderedPairs.rend(),
-              [order](const std::pair<std::string, PairData> &a, const std::pair<std::string, PairData> &b)
-              {
-                  if (order == bytes)
+        std::sort(orderedPairs.rbegin(), orderedPairs.rend(),
+                  [order](const std::pair<std::string, PairData> &a, const std::pair<std::string, PairData> &b)
                   {
-                      return a.second.bytes < b.second.bytes;
-                  }
-                  else
-                  {
-                      return a.second.packets < b.second.packets;
-                  }
-              });
+                      if (order == bytes)
+                      {
+                          return a.second.bytes < b.second.bytes;
+                      }
+                      else
+                      {
+                          return a.second.packets < b.second.packets;
+                      }
+                  });
 
-    return orderedPairs;
+        return orderedPairs;
+    }
 }
 
 /* Timer function, gets packets once per second and processes them */
@@ -75,6 +89,7 @@ void getStats(const char *orderString, std::unordered_map<std::string, struct Pa
 
         /* Vector of sorted pairs */
         std::vector<std::pair<std::string, PairData>> orderedPairs = orderPairs(pairsCopy, order);
+
         display(orderedPairs);
 
         /* Accounts for processing time of the packets */

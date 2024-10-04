@@ -1,23 +1,26 @@
 #include "../include/handler.h"
 
 /* FOR TESTING PURPOSES ONLY */
-void printThreePairs(const std::unordered_map<std::string, PairData> &pairs)
+namespace
 {
-    int count = 0;
-
-    for (const auto &pair : pairs)
+    void printThreePairs(const std::unordered_map<std::string, PairData> &pairs)
     {
-        std::cout << "Connection: " << pair.first << " | Packet Count: " << pair.second.packets << std::endl;
-        count++;
-        if (count >= 3)
+        int count = 0;
+
+        for (const auto &pair : pairs)
         {
-            break;
+            std::cout << "Connection: " << pair.first << " | Packet Count: " << pair.second.packets << std::endl;
+            count++;
+            if (count >= 3)
+            {
+                break;
+            }
         }
-    }
 
-    if (pairs.size() < 3)
-    {
-        std::cout << "There are fewer than 3 connections in the map." << std::endl;
+        if (pairs.size() < 3)
+        {
+            std::cout << "There are fewer than 3 connections in the map." << std::endl;
+        }
     }
 }
 
