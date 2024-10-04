@@ -2,10 +2,14 @@
 
 /*
 TODO:
+PROTOCOL needs to be a a part of the unique KEY in the HASHMAP :)))
+then split the key again and retreive protocol for printing
+
 Match SRC:DST and DST:SRC pairs
 Count total bytes/s and packets/s
 get top 10
 display
+
 */
 namespace
 {
