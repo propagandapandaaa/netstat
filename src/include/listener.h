@@ -4,8 +4,9 @@
 #include <iostream>
 #include <cstring>
 #include <mutex>
+#include <thread>
 #include "handler.h"
 
-void listener(const char *interface, Mutex_Hashmap<std::string, struct PairData> &pairs);
+void listener(const char *interface, std::unordered_map<std::string, struct PairData> pairs);
 
 #endif

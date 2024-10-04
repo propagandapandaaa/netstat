@@ -1,7 +1,7 @@
 #include "../include/listener.h"
 
 /* Reads packets from buffer and calls handler function */
-void listener(const char *interface, Mutex_Hashmap<std::string, struct PairData> &pairs)
+void listener(const char *interface, std::unordered_map<std::string, struct PairData> pairs)
 {
     char errorBuffer[PCAP_ERRBUF_SIZE];
     pcap_t *handle;

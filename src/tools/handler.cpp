@@ -21,11 +21,12 @@ void printThreePairs(const std::unordered_map<std::string, PairData> &pairs)
     }
 }
 
-/* Adds new packets to pairs hashmap, if pair exists, bytes and packet count is incremented */
+/*  USES: lock_guard(pair_lock)
+    Adds new packets to pairs hashmap, if pair exists, bytes and packet count is incremented */
 void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet)
 {
-    auto *pairs = reinterpret_cast<Mutex_Hashmap<std::string, struct PairData> *>(userData);
-    std::cout << "Packet captured: length " << pkthdr->len << std::endl;
+    auto *pairs = reinterpret_cast<std::unordered_map<std::string, struct PairData> *>(userData);
+    // std::cout << "Packet captured: length " << pkthdr->len << std::endl;
     struct ether_header *eth_header = (struct ether_header *)packet;
 
     if (ntohs(eth_header->ether_type) == ETHERTYPE_IP)
@@ -58,6 +59,8 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
         char connection_string[100];
         snprintf(connection_string, sizeof(connection_string), "%s:%d_%s:%d", src_ip, src_port, dst_ip, dst_port);
 
+        const std::lock_guard<std::mutex> lock(pair_lock);
+
         auto it = pairs->find(connection_string);
         if (it != pairs->end())
         {
@@ -69,8 +72,8 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
             new_data.packets = 1;
             pairs->emplace(connection_string, new_data);
         }
-        printf("Connection: %s\n", connection_string);
+        // printf("Connection: %s\n", connection_string);
 
-        printThreePairs(*pairs);
+        // printThreePairs(*pairs);
     }
 }

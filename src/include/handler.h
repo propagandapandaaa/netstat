@@ -1,7 +1,9 @@
 #ifndef HANDLER_H
 #define HANDLER_H
 
-#include "hashmap.h"
+// #include "hashmap.h"
+#include "locks.h"
+
 #include <unordered_map>
 #include <pcap.h>
 #include <cstdlib>

@@ -13,18 +13,21 @@ SOURCES = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(TOOLS_DIR)/*.cpp)
 OBJECTS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp)) \
           $(patsubst $(TOOLS_DIR)/%.cpp, $(BUILD_DIR)/tools/%.o, $(wildcard $(TOOLS_DIR)/*.cpp))
 
-TARGET = $(BIN_DIR)/build
+TARGET = $(BIN_DIR)/exec
 
-all: $(TARGET)
+all: $(TARGET) clean_objects
 
 $(TARGET): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $^ -lpcap
+	$(CXX) $(CXXFLAGS) -o $@ $^ -lpcap -lncurses
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 $(BUILD_DIR)/tools/%.o: $(TOOLS_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+clean_objects:
+	rm -f $(BUILD_DIR)/*.o $(BUILD_DIR)/tools/*.o  # Clear object files
 
 clean:
 	rm -rf $(BUILD_DIR) $(TARGET)
