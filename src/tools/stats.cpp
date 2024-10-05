@@ -1,17 +1,5 @@
 #include "../include/stats.h"
 
-/*
-TODO:
-PROTOCOL needs to be a a part of the unique KEY in the HASHMAP :)))
-then split the key again and retreive protocol for printing
-
-Match SRC:DST and DST:SRC pairs
-Count total bytes/s and packets/s
-get top 10
-display
-
-*/
-
 namespace
 {
     /*  Input:  hashmap key
@@ -63,6 +51,7 @@ namespace
         }
     }
 
+    /* Converts unordered map to a vector that is usable in the display */
     std::vector<PairStats> formatData(std::unordered_map<std::string, struct PairData> &pairs)
     {
         std::vector<PairStats> result_data;
@@ -127,38 +116,6 @@ namespace
         return result_data;
     }
 
-    /* FOR TESTING ONLY */
-    void testPrintPairs(const std::unordered_map<std::string, PairData> &pairs)
-    {
-        std::cout << "Key                | Bytes         | Packages\n";
-        std::cout << "-----------------------------------------------\n";
-        for (const auto &pair : pairs)
-        {
-            std::cout << pair.first << " | "
-                      << pair.second.bytes << " | "
-                      << pair.second.packets << '\n';
-        }
-    }
-
-    /* FOR TESTING ONLY */
-    void testPrintStats(std::vector<PairStats> pairs)
-    {
-        std::cout << "src         | dst       | proto | bsent | brecv |psent | precv | btotal |ptotal \n";
-        std::cout << "--------------------------------\n";
-        for (const auto &pair : pairs)
-        {
-            std::cout << pair.src_ip << " | "
-                      << pair.dst_ip << " | "
-                      << pair.proto << " | "
-                      << pair.bytes_sent << " | "
-                      << pair.bytes_recv << " | "
-                      << pair.packets_sent << " | "
-                      << pair.patckets_recv << " | "
-                      << pair.bytes_total << " | "
-                      << pair.packets_total << '\n';
-        }
-    }
-
     /* Convert const char params to enum to avoid using strcmp() */
     OrderBy setOrder(const char *order)
     {
@@ -190,27 +147,6 @@ namespace
                   });
         return pairs;
     }
-
-    /* DEPRECATED */
-    std::vector<std::pair<std::string, PairData>> orderPairs(std::unordered_map<std::string, PairData> &pairs, OrderBy order)
-    {
-        std::vector<std::pair<std::string, PairData>> orderedPairs(pairs.begin(), pairs.end());
-
-        std::sort(orderedPairs.rbegin(), orderedPairs.rend(),
-                  [order](const std::pair<std::string, PairData> &a, const std::pair<std::string, PairData> &b)
-                  {
-                      if (order == bytes)
-                      {
-                          return a.second.bytes < b.second.bytes;
-                      }
-                      else
-                      {
-                          return a.second.packets < b.second.packets;
-                      }
-                  });
-
-        return orderedPairs;
-    }
 }
 
 /* Timer function, gets packets once per second and processes them */
@@ -240,12 +176,7 @@ void getStats(const char *orderString, std::unordered_map<std::string, PairData>
         std::vector<PairStats> pair_stats = formatData(pairs_copy);
         std::vector<PairStats> pair_stats_ordered = orderData(pair_stats, order);
 
-        // testPrintStats(pair_stats);
         display(pair_stats);
-        /* Vector of sorted pairs */
-        // std::vector<std::pair<std::string, PairData>> orderedPairs = orderPairs(pairsCopy, order);
-
-        // display(orderedPairs);
 
         /* Accounts for processing time of the packets */
         const auto end = std::chrono::high_resolution_clock::now();
@@ -259,7 +190,7 @@ void getStats(const char *orderString, std::unordered_map<std::string, PairData>
         }
         else
         {
-            /*  FIGURE OUT WHAT TO DO WITH THIS
+            /*  DONT FORGET TO FIGURE OUT WHAT TO DO WITH THIS
                 even though it probably will never reach it */
             continue;
         }

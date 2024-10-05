@@ -6,6 +6,7 @@
 #include "stats.h"
 #include <vector>
 
+/* Structure for passing data from stats to display */
 struct PairStats
 {
     std::string src_ip;

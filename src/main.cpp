@@ -12,8 +12,7 @@ int main(int argc, char **argv)
 
     initscr();
 
-    std::unordered_map<std::string, struct PairData> pairs;
-    // std::unordered_map<std::string, struct PairData> pairs;
+    std::unordered_map<std::string, PairData> pairs;
 
     std::thread listener_thread([&options, &pairs]()
                                 { listener(options.interface.c_str(), pairs); });
@@ -24,8 +23,7 @@ int main(int argc, char **argv)
     listener_thread.join();
     stats_thread.join();
 
-    endwin();
+    /* CHECK WHAT CLEANUP NEEDS TO BE DONE :) */
 
-    printf("%s \n", options.interface.c_str());
-    printf("%s \n", options.order.c_str());
+    endwin();
 }

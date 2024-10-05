@@ -2,27 +2,6 @@
 
 namespace
 {
-    /* FOR TESTING PURPOSES ONLY */
-    void printThreePairs(const std::unordered_map<std::string, PairData> &pairs)
-    {
-        int count = 0;
-
-        for (const auto &pair : pairs)
-        {
-            std::cout << "Connection: " << pair.first << " | Packet Count: " << pair.second.packets << std::endl;
-            count++;
-            if (count >= 3)
-            {
-                break;
-            }
-        }
-
-        if (pairs.size() < 3)
-        {
-            std::cout << "There are fewer than 3 connections in the map." << std::endl;
-        }
-    }
-
     std::string getProtocol(const u_int8_t protocol)
     {
         switch (protocol)
@@ -48,7 +27,6 @@ namespace
 void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet)
 {
     auto *pairs = reinterpret_cast<std::unordered_map<std::string, PairData> *>(userData);
-    // std::cout << "Packet captured: length " << pkthdr->len << std::endl;
     struct ether_header *eth_header = (struct ether_header *)packet;
 
     if (ntohs(eth_header->ether_type) == ETHERTYPE_IP)
@@ -62,7 +40,6 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
 
         u_int16_t src_port, dst_port;
 
-        /* THIS CAN BE CHANGED NOW */
         struct tcphdr *packet_header = (struct tcphdr *)(packet + sizeof(struct ether_header) + sizeof(struct ip));
         src_port = ntohs(packet_header->th_sport);
         dst_port = ntohs(packet_header->th_dport);
@@ -87,8 +64,5 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
             new_data.bytes = pkthdr->len;
             pairs->emplace(connection_string, new_data);
         }
-        // printf("Connection: %s\n", connection_string);
-
-        // printThreePairs(*pairs);
     }
 }
