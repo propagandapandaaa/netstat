@@ -11,28 +11,11 @@ get top 10
 display
 
 */
+
 namespace
 {
-    struct PairStats
-    {
-        std::string src_ip;
-        std::string dst_ip;
-        std::string proto;
-
-        int bytes_sent;
-        int bytes_recv;
-
-        int packets_sent;
-        int patckets_recv;
-
-        int bytes_total;   // Sum of sent and received bytes
-        int packets_total; // Sum of sent and receivet packets
-    };
-
-    std::string splitIp(std::string)
-    {
-    }
-
+    /*  Input:  hashmap key
+        Output: src_ip string */
     std::string getSrcIp(std::string key)
     {
         size_t index = key.find('_');
@@ -46,10 +29,13 @@ namespace
         }
     }
 
+    /*  Input:  hashmap key
+        Output: dst_ip string */
     std::string getDstIp(std::string key)
     {
         size_t start_index = key.find('_');
         size_t end_index = key.find('_', start_index + 1);
+
         if (start_index != std::string::npos && end_index != std::string::npos)
         {
             return key.substr(start_index + 1, end_index - start_index - 1);
@@ -60,10 +46,13 @@ namespace
         }
     }
 
+    /*  Input:  hashmap key
+        Output: protocol string */
     std::string getProtocol(std::string key)
     {
         size_t start_index = key.find('_');
         size_t end_index = key.find('_', start_index + 1);
+
         if (start_index != std::string::npos && end_index != std::string::npos)
         {
             return key.substr(end_index + 1);
@@ -92,9 +81,9 @@ namespace
                     /* Protocol matches */
                     if (tmp.proto == data.proto)
                     {
+                        /* Current tmp src_ip is the sender */
                         if (tmp.src_ip == data.src_ip && tmp.dst_ip == data.dst_ip)
                         {
-                            /* ADD PACKETS NORMALY */
                             data.bytes_sent += pair.second.bytes;
                             data.packets_sent += pair.second.packets;
 
@@ -102,10 +91,9 @@ namespace
                             data.packets_total += pair.second.packets;
                             found = true;
                         }
-
+                        /* Current tmp src_ip is the receiver */
                         if (tmp.src_ip == data.dst_ip && tmp.dst_ip == data.src_ip)
                         {
-                            /* ADD PACKETS INVERTED */
                             data.bytes_recv += pair.second.bytes;
                             data.patckets_recv += pair.second.packets;
 
@@ -121,6 +109,7 @@ namespace
                 }
             }
 
+            /* The src:dst pair is new */
             if (!found)
             {
                 tmp.bytes_sent = pair.second.bytes;
@@ -184,6 +173,25 @@ namespace
     }
 
     /* Sorts pairs by packet count or bytes, set by the order param */
+    std::vector<PairStats> orderData(std::vector<PairStats> &pairs, OrderBy order)
+    {
+        // std::vector<PairStats> orderedStats;
+        std::sort(pairs.rbegin(), pairs.rend(),
+                  [order](const PairStats &a, const PairStats &b)
+                  {
+                      if (order == bytes)
+                      {
+                          return a.bytes_total < b.bytes_total;
+                      }
+                      else
+                      {
+                          return a.packets_total < b.packets_total;
+                      }
+                  });
+        return pairs;
+    }
+
+    /* DEPRECATED */
     std::vector<std::pair<std::string, PairData>> orderPairs(std::unordered_map<std::string, PairData> &pairs, OrderBy order)
     {
         std::vector<std::pair<std::string, PairData>> orderedPairs(pairs.begin(), pairs.end());
@@ -230,7 +238,10 @@ void getStats(const char *orderString, std::unordered_map<std::string, PairData>
         }
 
         std::vector<PairStats> pair_stats = formatData(pairs_copy);
-        testPrintStats(pair_stats);
+        std::vector<PairStats> pair_stats_ordered = orderData(pair_stats, order);
+
+        // testPrintStats(pair_stats);
+        display(pair_stats);
         /* Vector of sorted pairs */
         // std::vector<std::pair<std::string, PairData>> orderedPairs = orderPairs(pairsCopy, order);
 

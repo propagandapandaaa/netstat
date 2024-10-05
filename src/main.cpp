@@ -10,7 +10,7 @@ int main(int argc, char **argv)
     options options;
     parseArgs(argc, argv, &options);
 
-    // initscr();
+    initscr();
 
     std::unordered_map<std::string, struct PairData> pairs;
     // std::unordered_map<std::string, struct PairData> pairs;
@@ -24,7 +24,7 @@ int main(int argc, char **argv)
     listener_thread.join();
     stats_thread.join();
 
-    // endwin();
+    endwin();
 
     printf("%s \n", options.interface.c_str());
     printf("%s \n", options.order.c_str());
