@@ -1,8 +1,8 @@
 #include "../include/handler.h"
 
-/* FOR TESTING PURPOSES ONLY */
 namespace
 {
+    /* FOR TESTING PURPOSES ONLY */
     void printThreePairs(const std::unordered_map<std::string, PairData> &pairs)
     {
         int count = 0;
@@ -20,6 +20,25 @@ namespace
         if (pairs.size() < 3)
         {
             std::cout << "There are fewer than 3 connections in the map." << std::endl;
+        }
+    }
+
+    std::string getProtocol(const u_int8_t protocol)
+    {
+        switch (protocol)
+        {
+        case IPPROTO_TCP:
+            return "tcp";
+            break;
+        case IPPROTO_UDP:
+            return "udp";
+            break;
+        case IPPROTO_ICMP:
+            return "icmp";
+            break;
+        default:
+            return "unknown";
+            break;
         }
     }
 }
@@ -42,25 +61,16 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
         inet_ntop(AF_INET, &(ip_header->ip_dst), dst_ip, INET_ADDRSTRLEN);
 
         u_int16_t src_port, dst_port;
-        if (ip_header->ip_p == IPPROTO_TCP)
-        {
-            struct tcphdr *tcp_header = (struct tcphdr *)(packet + sizeof(struct ether_header) + sizeof(struct ip));
-            src_port = ntohs(tcp_header->th_sport);
-            dst_port = ntohs(tcp_header->th_dport);
-        }
-        else if (ip_header->ip_p == IPPROTO_UDP)
-        {
-            struct udphdr *udp_header = (struct udphdr *)(packet + sizeof(struct ether_header) + sizeof(struct ip));
-            src_port = ntohs(udp_header->uh_sport);
-            dst_port = ntohs(udp_header->uh_dport);
-        }
-        else
-        {
-            return;
-        }
+
+        /* THIS CAN BE CHANGED NOW */
+        struct tcphdr *packet_header = (struct tcphdr *)(packet + sizeof(struct ether_header) + sizeof(struct ip));
+        src_port = ntohs(packet_header->th_sport);
+        dst_port = ntohs(packet_header->th_dport);
+
+        std::string protocol = getProtocol(ip_header->ip_p);
 
         char connection_string[100];
-        snprintf(connection_string, sizeof(connection_string), "%s:%d_%s:%d", src_ip, src_port, dst_ip, dst_port);
+        snprintf(connection_string, sizeof(connection_string), "%s:%d_%s:%d_%s", src_ip, src_port, dst_ip, dst_port, protocol.c_str());
 
         const std::lock_guard<std::mutex> lock(pair_lock);
 
