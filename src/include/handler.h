@@ -16,7 +16,12 @@
 #include <netinet/tcp.h>
 #include <netinet/udp.h>
 #include <net/ethernet.h>
+#include <netinet/ip6.h>
+#include <netinet/icmp6.h>
 #include <string.h>
+
+#define ETH_P_IP 0x0800   // IPv4 protocol
+#define ETH_P_IPV6 0x86DD // IPv6 protocol
 
 struct PairData
 {

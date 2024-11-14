@@ -14,9 +14,11 @@ int main(int argc, char **argv)
 
     std::unordered_map<std::string, PairData> pairs;
 
+    /* Listens to incoming packets, adds them to hashmap */
     std::thread listener_thread([&options, &pairs]()
                                 { listener(options.interface.c_str(), pairs); });
 
+    /* Creates and displays statistics taken from the unordered hashmap */
     std::thread stats_thread([&options, &pairs]()
                              { getStats(options.order.c_str(), pairs); });
 

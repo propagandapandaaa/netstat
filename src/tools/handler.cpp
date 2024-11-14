@@ -8,17 +8,24 @@ namespace
         {
         case IPPROTO_TCP:
             return "tcp";
-            break;
         case IPPROTO_UDP:
             return "udp";
-            break;
         case IPPROTO_ICMP:
             return "icmp";
-            break;
+        case IPPROTO_ICMPV6:
+            return "icmpv6";
         default:
             return "unknown";
-            break;
         }
+    }
+
+    void processIPV4()
+    {
+        return;
+    }
+    void processIPV6()
+    {
+        return;
     }
 }
 
@@ -29,28 +36,33 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
     auto *pairs = reinterpret_cast<std::unordered_map<std::string, PairData> *>(userData);
     struct ether_header *eth_header = (struct ether_header *)packet;
 
-    if (ntohs(eth_header->ether_type) == ETHERTYPE_IP)
+    // Declare all variables outside switch
+    char src_ip[INET6_ADDRSTRLEN]; // Use INET6_ADDRSTRLEN as it's larger and works for both
+    char dst_ip[INET6_ADDRSTRLEN];
+    u_int16_t src_port, dst_port;
+    char connection_string[128];
+    std::string protocol;
+    struct tcphdr *packet_header;
+
+    switch (ntohs(eth_header->ether_type))
+    {
+    /* IPV4 */
+    case ETH_P_IP:
     {
         struct ip *ip_header = (struct ip *)(packet + sizeof(struct ether_header));
-
-        char src_ip[INET_ADDRSTRLEN];
-        char dst_ip[INET_ADDRSTRLEN];
         inet_ntop(AF_INET, &(ip_header->ip_src), src_ip, INET_ADDRSTRLEN);
         inet_ntop(AF_INET, &(ip_header->ip_dst), dst_ip, INET_ADDRSTRLEN);
 
-        u_int16_t src_port, dst_port;
-
-        struct tcphdr *packet_header = (struct tcphdr *)(packet + sizeof(struct ether_header) + sizeof(struct ip));
+        packet_header = (struct tcphdr *)(packet + sizeof(struct ether_header) + sizeof(struct ip));
         src_port = ntohs(packet_header->th_sport);
         dst_port = ntohs(packet_header->th_dport);
 
-        std::string protocol = getProtocol(ip_header->ip_p);
+        protocol = getProtocol(ip_header->ip_p);
 
-        char connection_string[100];
-        snprintf(connection_string, sizeof(connection_string), "%s:%d_%s:%d_%s", src_ip, src_port, dst_ip, dst_port, protocol.c_str());
+        snprintf(connection_string, sizeof(connection_string), "%s:%d_%s:%d_%s",
+                 src_ip, src_port, dst_ip, dst_port, protocol.c_str());
 
         const std::lock_guard<std::mutex> lock(pair_lock);
-
         auto it = pairs->find(connection_string);
         if (it != pairs->end())
         {
@@ -64,5 +76,40 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
             new_data.bytes = pkthdr->len;
             pairs->emplace(connection_string, new_data);
         }
+        break;
+    }
+
+    /* IPV6 */
+    case ETH_P_IPV6:
+    {
+        struct ip6_hdr *ip6_header = (struct ip6_hdr *)(packet + sizeof(struct ether_header));
+        inet_ntop(AF_INET6, &(ip6_header->ip6_src), src_ip, INET6_ADDRSTRLEN);
+        inet_ntop(AF_INET6, &(ip6_header->ip6_dst), dst_ip, INET6_ADDRSTRLEN);
+
+        packet_header = (struct tcphdr *)(packet + sizeof(struct ether_header) + sizeof(struct ip6_hdr));
+        src_port = ntohs(packet_header->th_sport);
+        dst_port = ntohs(packet_header->th_dport);
+
+        protocol = getProtocol(ip6_header->ip6_nxt);
+
+        snprintf(connection_string, sizeof(connection_string), "%s:%d_%s:%d_%s",
+                 src_ip, src_port, dst_ip, dst_port, protocol.c_str());
+
+        const std::lock_guard<std::mutex> lock(pair_lock);
+        auto it = pairs->find(connection_string);
+        if (it != pairs->end())
+        {
+            it->second.packets++;
+            it->second.bytes += pkthdr->len;
+        }
+        else
+        {
+            PairData new_data;
+            new_data.packets = 1;
+            new_data.bytes = pkthdr->len;
+            pairs->emplace(connection_string, new_data);
+        }
+        break;
+    }
     }
 }
