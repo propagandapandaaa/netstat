@@ -1,13 +1,28 @@
 #include "../include/display.h"
 
+std::string formatDataRate(double bytes_per_sec)
+{
+    const char *units[] = {"B/s", "KB/s", "MB/s", "GB/s"};
+    int unit = 0;
+    double value = bytes_per_sec;
+
+    while (value >= 1024 && unit < 3)
+    {
+        value /= 1024;
+        unit++;
+    }
+
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(1) << value << units[unit];
+    return ss.str();
+}
+
 void display(std::vector<PairStats> pairs)
 {
-    // Define column widths
-    const int IPV6_MAX_LENGTH = 47; // INET6_ADDRSTRLEN
+    const int IPV6_MAX_LENGTH = 47;
     const int PROTO_WIDTH = 7;
-    const int NUM_WIDTH = 7;
+    const int NUM_WIDTH = 10;
 
-    // Create format string for each column with proper spacing
     std::stringstream header;
     header << std::left
            << std::setfill(' ')
@@ -31,6 +46,14 @@ void display(std::vector<PairStats> pairs)
     for (int i = 0; i < limit; ++i)
     {
         const auto &pair = pairs[i];
+        int seconds = pair.seconds;
+
+        /* Rates per second */
+        double bytes_sent_per_sec = static_cast<double>(pair.bytes_sent) / seconds;
+        double bytes_recv_per_sec = static_cast<double>(pair.bytes_recv) / seconds;
+        double packets_sent_per_sec = static_cast<double>(pair.packets_sent) / seconds;
+        double packets_recv_per_sec = static_cast<double>(pair.packets_recv) / seconds;
+
         std::stringstream ss;
         ss << std::left
            << std::setfill(' ')
@@ -38,17 +61,17 @@ void display(std::vector<PairStats> pairs)
            << std::setw(IPV6_MAX_LENGTH) << pair.dst_ip << "  "
            << std::setw(PROTO_WIDTH) << pair.proto << "  "
            << std::right
-           << std::setw(NUM_WIDTH) << pair.bytes_sent << "  "
-           << std::setw(NUM_WIDTH) << pair.bytes_recv << "  "
-           << std::setw(NUM_WIDTH) << pair.packets_sent << "  "
-           << std::setw(NUM_WIDTH) << pair.packets_recv << "  "
-           << std::setw(NUM_WIDTH) << (pair.bytes_sent + pair.bytes_recv) << "  "
-           << std::setw(NUM_WIDTH) << (pair.packets_sent + pair.packets_recv) << "\n";
+           << std::setw(NUM_WIDTH) << formatDataRate(bytes_sent_per_sec) << "  "
+           << std::setw(NUM_WIDTH) << formatDataRate(bytes_recv_per_sec) << "  "
+           << std::setw(NUM_WIDTH) << std::fixed << std::setprecision(1) << packets_sent_per_sec << "  "
+           << std::setw(NUM_WIDTH) << std::fixed << std::setprecision(1) << packets_recv_per_sec << "  "
+           << std::setw(NUM_WIDTH) << formatDataRate(static_cast<double>(pair.bytes_sent + pair.bytes_recv) / seconds) << "  "
+           << std::setw(NUM_WIDTH) << std::fixed << std::setprecision(1)
+           << static_cast<double>(pair.packets_sent + pair.packets_recv) / seconds << "\n";
 
         output += ss.str();
     }
 
-    /* Display output */
     clear();
     printw("%s", output.c_str());
     refresh();

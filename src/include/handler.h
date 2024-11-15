@@ -27,6 +27,9 @@ struct PairData
 {
     int packets;
     int bytes;
+    int timeout; // if this expires, pair gets deleted
+    bool updated;
+    int seconds; // amount of seconds in the system to calculate data flow per second
 };
 
 void packetHandler(u_char *userData, const pcap_pkthdr *pkthdr, const u_char *packet);

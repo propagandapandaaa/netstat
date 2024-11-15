@@ -78,6 +78,7 @@ namespace
 
                             data.bytes_total += pair.second.bytes;
                             data.packets_total += pair.second.packets;
+                            data.seconds = pair.second.seconds;
                             found = true;
                         }
                         /* Current tmp src_ip is the receiver */
@@ -88,6 +89,7 @@ namespace
 
                             data.bytes_total += pair.second.bytes;
                             data.packets_total += pair.second.packets;
+                            data.seconds = pair.second.seconds;
                             found = true;
                         }
                         if (found)
@@ -109,6 +111,8 @@ namespace
 
                 tmp.bytes_total = pair.second.bytes;
                 tmp.packets_total = pair.second.packets;
+
+                tmp.seconds = pair.second.seconds;
 
                 result_data.emplace_back(tmp);
             }
@@ -147,6 +151,52 @@ namespace
                   });
         return pairs;
     }
+
+    /* Merges new caputred packets with previously captured data */
+    void addPairData(const std::unordered_map<std::string, PairData> &new_pairs,
+                     std::unordered_map<std::string, PairData> &persistent_pairs,
+                     const int timeout)
+    {
+        for (const auto &pair : new_pairs)
+        {
+            auto it = persistent_pairs.find(pair.first);
+            if (it == persistent_pairs.end())
+            {
+                persistent_pairs[pair.first] = pair.second;
+                persistent_pairs[pair.first].timeout = timeout;
+                persistent_pairs[pair.first].updated = true;
+                persistent_pairs[pair.first].seconds = 1;
+            }
+            else
+            {
+                it->second.bytes += pair.second.bytes;
+                it->second.packets += pair.second.packets;
+                it->second.timeout = timeout;
+                it->second.updated = true;
+                it->second.seconds++;
+            }
+        }
+    }
+
+    /* Clear timed out pairs */
+    void processTimeouts(std::unordered_map<std::string, PairData> &persistent_pairs)
+    {
+        for (auto it = persistent_pairs.begin(); it != persistent_pairs.end();)
+        {
+            if (!it->second.updated)
+            {
+                it->second.timeout--;
+                if (it->second.timeout <= 0)
+                {
+                    it = persistent_pairs.erase(it);
+                    continue;
+                }
+            }
+            it->second.updated = false;
+            ++it;
+        }
+    }
+
 }
 
 /* Timer function, gets packets once per second and processes them */
@@ -154,11 +204,13 @@ void getStats(const char *orderString, std::unordered_map<std::string, PairData>
 {
 
     std::unordered_map<std::string, PairData> pairs_copy;
+    std::unordered_map<std::string, PairData> pairs_persistent;
 
     /* Wait for the first batch of packets */
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
     OrderBy order = setOrder(orderString);
+    const int DEFAULT_TIMEOUT = 5;
 
     while (running)
     {
@@ -173,7 +225,11 @@ void getStats(const char *orderString, std::unordered_map<std::string, PairData>
             pairs.clear();
         }
 
-        std::vector<PairStats> pair_stats = formatData(pairs_copy);
+        addPairData(pairs_copy, pairs_persistent, DEFAULT_TIMEOUT);
+
+        processTimeouts(pairs_persistent);
+
+        std::vector<PairStats> pair_stats = formatData(pairs_persistent);
         std::vector<PairStats> pair_stats_ordered = orderData(pair_stats, order);
 
         display(pair_stats);

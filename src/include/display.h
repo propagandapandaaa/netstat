@@ -23,6 +23,8 @@ struct PairStats
 
     int bytes_total;   // Sum of sent and received bytes
     int packets_total; // Sum of sent and receivet packets
+
+    int seconds;
 };
 
 void display(std::vector<PairStats> pairs);
