@@ -84,7 +84,7 @@ namespace
                         if (tmp.src_ip == data.dst_ip && tmp.dst_ip == data.src_ip)
                         {
                             data.bytes_recv += pair.second.bytes;
-                            data.patckets_recv += pair.second.packets;
+                            data.packets_recv += pair.second.packets;
 
                             data.bytes_total += pair.second.bytes;
                             data.packets_total += pair.second.packets;
@@ -105,7 +105,7 @@ namespace
                 tmp.bytes_recv = 0;
 
                 tmp.packets_sent = pair.second.packets;
-                tmp.patckets_recv = 0;
+                tmp.packets_recv = 0;
 
                 tmp.bytes_total = pair.second.bytes;
                 tmp.packets_total = pair.second.packets;
@@ -150,7 +150,7 @@ namespace
 }
 
 /* Timer function, gets packets once per second and processes them */
-void getStats(const char *orderString, std::unordered_map<std::string, PairData> &pairs)
+void getStats(const char *orderString, std::unordered_map<std::string, PairData> &pairs, std::atomic<bool> &running)
 {
 
     std::unordered_map<std::string, PairData> pairs_copy;
@@ -160,7 +160,7 @@ void getStats(const char *orderString, std::unordered_map<std::string, PairData>
 
     OrderBy order = setOrder(orderString);
 
-    while (true)
+    while (running)
     {
         const auto start = std::chrono::high_resolution_clock::now();
 

@@ -4,6 +4,8 @@
 #include <ncurses.h>
 #include "handler.h"
 #include "stats.h"
+#include <iomanip>
+#include <sstream>
 #include <vector>
 
 /* Structure for passing data from stats to display */
@@ -17,7 +19,7 @@ struct PairStats
     int bytes_recv;
 
     int packets_sent;
-    int patckets_recv;
+    int packets_recv;
 
     int bytes_total;   // Sum of sent and received bytes
     int packets_total; // Sum of sent and receivet packets
