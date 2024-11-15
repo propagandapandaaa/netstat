@@ -3,7 +3,7 @@
 void display(std::vector<PairStats> pairs)
 {
     // Define column widths
-    const int IPV6_MAX_LENGTH = 46; // INET6_ADDRSTRLEN
+    const int IPV6_MAX_LENGTH = 47; // INET6_ADDRSTRLEN
     const int PROTO_WIDTH = 7;
     const int NUM_WIDTH = 7;
 
@@ -11,15 +11,15 @@ void display(std::vector<PairStats> pairs)
     std::stringstream header;
     header << std::left
            << std::setfill(' ')
-           << std::setw(IPV6_MAX_LENGTH) << "src" << " | "
-           << std::setw(IPV6_MAX_LENGTH) << "dst" << " | "
-           << std::setw(PROTO_WIDTH) << "proto" << " | "
+           << std::setw(IPV6_MAX_LENGTH) << "src" << "  "
+           << std::setw(IPV6_MAX_LENGTH) << "dst" << "  "
+           << std::setw(PROTO_WIDTH) << "proto" << "  "
            << std::right
-           << std::setw(NUM_WIDTH) << "bsent" << " | "
-           << std::setw(NUM_WIDTH) << "brecv" << " | "
-           << std::setw(NUM_WIDTH) << "psent" << " | "
-           << std::setw(NUM_WIDTH) << "precv" << " | "
-           << std::setw(NUM_WIDTH) << "btotal" << " | "
+           << std::setw(NUM_WIDTH) << "bsent" << "  "
+           << std::setw(NUM_WIDTH) << "brecv" << "  "
+           << std::setw(NUM_WIDTH) << "psent" << "  "
+           << std::setw(NUM_WIDTH) << "precv" << "  "
+           << std::setw(NUM_WIDTH) << "btotal" << "  "
            << std::setw(NUM_WIDTH) << "ptotal" << "\n";
 
     std::string output = header.str();
@@ -34,15 +34,15 @@ void display(std::vector<PairStats> pairs)
         std::stringstream ss;
         ss << std::left
            << std::setfill(' ')
-           << std::setw(IPV6_MAX_LENGTH) << pair.src_ip << " | "
-           << std::setw(IPV6_MAX_LENGTH) << pair.dst_ip << " | "
-           << std::setw(PROTO_WIDTH) << pair.proto << " | "
+           << std::setw(IPV6_MAX_LENGTH) << pair.src_ip << "  "
+           << std::setw(IPV6_MAX_LENGTH) << pair.dst_ip << "  "
+           << std::setw(PROTO_WIDTH) << pair.proto << "  "
            << std::right
-           << std::setw(NUM_WIDTH) << pair.bytes_sent << " | "
-           << std::setw(NUM_WIDTH) << pair.bytes_recv << " | "
-           << std::setw(NUM_WIDTH) << pair.packets_sent << " | "
-           << std::setw(NUM_WIDTH) << pair.packets_recv << " | "
-           << std::setw(NUM_WIDTH) << (pair.bytes_sent + pair.bytes_recv) << " | "
+           << std::setw(NUM_WIDTH) << pair.bytes_sent << "  "
+           << std::setw(NUM_WIDTH) << pair.bytes_recv << "  "
+           << std::setw(NUM_WIDTH) << pair.packets_sent << "  "
+           << std::setw(NUM_WIDTH) << pair.packets_recv << "  "
+           << std::setw(NUM_WIDTH) << (pair.bytes_sent + pair.bytes_recv) << "  "
            << std::setw(NUM_WIDTH) << (pair.packets_sent + pair.packets_recv) << "\n";
 
         output += ss.str();

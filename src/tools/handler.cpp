@@ -35,14 +35,15 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
 {
     auto *pairs = reinterpret_cast<std::unordered_map<std::string, PairData> *>(userData);
     struct ether_header *eth_header = (struct ether_header *)packet;
-
-    // Declare all variables outside switch
-    char src_ip[INET6_ADDRSTRLEN]; // Use INET6_ADDRSTRLEN as it's larger and works for both
-    char dst_ip[INET6_ADDRSTRLEN];
-    u_int16_t src_port, dst_port;
-    char connection_string[128];
-    std::string protocol;
     struct tcphdr *packet_header;
+
+    char src_ip[INET6_ADDRSTRLEN];
+    char dst_ip[INET6_ADDRSTRLEN];
+    char connection_string[128];
+
+    std::string protocol;
+
+    u_int16_t src_port, dst_port;
 
     switch (ntohs(eth_header->ether_type))
     {
@@ -92,7 +93,7 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
 
         protocol = getProtocol(ip6_header->ip6_nxt);
 
-        snprintf(connection_string, sizeof(connection_string), "%s:%d_%s:%d_%s",
+        snprintf(connection_string, sizeof(connection_string), "[%s]:%d_[%s]:%d_%s",
                  src_ip, src_port, dst_ip, dst_port, protocol.c_str());
 
         const std::lock_guard<std::mutex> lock(pair_lock);
