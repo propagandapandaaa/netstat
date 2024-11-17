@@ -17,6 +17,23 @@ namespace
             exit(EXIT_FAILURE);
         }
     }
+
+    void printHelp()
+    {
+        std::cout << "\nManual: isa-top\n";
+        std::cout << "============================\n\n";
+        std::cout << "SYNTAX:\n";
+        std::cout << "  ./isa-top -i <interface> [-s <sort_type>]\n\n";
+        std::cout << "PARAMETERS:\n";
+        std::cout << "  -i <interface>  : Required. Network interface to monitor (eth0, lo, ...)\n";
+        std::cout << "  -s <sort_type>  : Optional. Sort output by:\n";
+        std::cout << "                    b - total bytes (default)\n";
+        std::cout << "                    p - total packets\n\n";
+        std::cout << "EXAMPLE:\n";
+        std::cout << "  ./isa-top -i eth0 -s p\n"
+                  << std::endl;
+    }
+
 }
 
 /*  Put command line arguments into a struct */
@@ -25,7 +42,7 @@ void parseArgs(int argc, char **argv, options *options)
     options->interface = "default";
     options->order = "b";
     int opt;
-    while ((opt = getopt(argc, argv, "i:s:")) != -1)
+    while ((opt = getopt(argc, argv, "i:s:h")) != -1)
     {
         switch (opt)
         {
@@ -35,10 +52,14 @@ void parseArgs(int argc, char **argv, options *options)
         case 's':
             options->order = optarg;
             break;
+        case 'h':
+            printHelp();
+            exit(EXIT_SUCCESS);
         default:
-            std::cout << "invalid options" << std::endl;
+            std::cout << "\nInvalid options\n"
+                      << std::endl;
+            printHelp();
             exit(EXIT_FAILURE);
-            // Print help or smth like that
         }
     }
     validateArgs(options);

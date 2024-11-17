@@ -19,15 +19,6 @@ namespace
         }
     }
 
-    void processIPV4()
-    {
-        return;
-    }
-    void processIPV6()
-    {
-        return;
-    }
-
     void updatePairStats(std::unordered_map<std::string, PairData> *pairs,
                          const std::string &connection_string,
                          const uint32_t packet_length)
@@ -85,7 +76,7 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
 
         snprintf(connection_string, sizeof(connection_string), "%s:%d_%s:%d_%s",
                  src_ip, src_port, dst_ip, dst_port, protocol.c_str());
-
+        updatePairStats(pairs, connection_string, pkthdr->len);
         break;
     }
 
@@ -104,7 +95,7 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
 
         snprintf(connection_string, sizeof(connection_string), "[%s]:%d_[%s]:%d_%s",
                  src_ip, src_port, dst_ip, dst_port, protocol.c_str());
-
+        updatePairStats(pairs, connection_string, pkthdr->len);
         break;
     }
     default:
@@ -112,7 +103,6 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
         /* Unsupported type, skip */
         break;
     }
-        updatePairStats(pairs, connection_string, pkthdr->len);
     }
 }
 
@@ -147,6 +137,7 @@ void processLoopbackPacket(u_char *userData, const struct pcap_pkthdr *pkthdr, c
 
         snprintf(connection_string, sizeof(connection_string), "%s:%d_%s:%d_%s",
                  src_ip, src_port, dst_ip, dst_port, protocol.c_str());
+        updatePairStats(pairs, connection_string, pkthdr->len);
         break;
     }
     case 6: // IPv6
@@ -162,6 +153,7 @@ void processLoopbackPacket(u_char *userData, const struct pcap_pkthdr *pkthdr, c
 
         snprintf(connection_string, sizeof(connection_string), "[%s]:%d_[%s]:%d_%s",
                  src_ip, src_port, dst_ip, dst_port, protocol.c_str());
+        updatePairStats(pairs, connection_string, pkthdr->len);
         break;
     }
     default:
@@ -170,5 +162,4 @@ void processLoopbackPacket(u_char *userData, const struct pcap_pkthdr *pkthdr, c
         break;
     }
     }
-    updatePairStats(pairs, connection_string, pkthdr->len);
 }

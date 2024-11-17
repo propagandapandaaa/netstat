@@ -202,9 +202,6 @@ namespace
 /* Timer function, gets packets once per second and processes them */
 void getStats(const char *orderString, std::unordered_map<std::string, PairData> &pairs, std::atomic<bool> &running)
 {
-
-    // initscr();
-
     std::unordered_map<std::string, PairData> pairs_copy;
     std::unordered_map<std::string, PairData> pairs_persistent;
 
@@ -248,9 +245,7 @@ void getStats(const char *orderString, std::unordered_map<std::string, PairData>
         }
         else
         {
-            /*  DONT FORGET TO FIGURE OUT WHAT TO DO WITH THIS
-                even though it probably will never reach it */
-            continue;
+            throw std::runtime_error("invalid timing");
         }
     }
 }

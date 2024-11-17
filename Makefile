@@ -13,7 +13,7 @@ SOURCES = $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(TOOLS_DIR)/*.cpp)
 OBJECTS = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(wildcard $(SRC_DIR)/*.cpp)) \
           $(patsubst $(TOOLS_DIR)/%.cpp, $(BUILD_DIR)/tools/%.o, $(wildcard $(TOOLS_DIR)/*.cpp))
 
-TARGET = $(BIN_DIR)/exec
+TARGET = $(BIN_DIR)/isa-top
 
 all: $(TARGET) clean_objects
 

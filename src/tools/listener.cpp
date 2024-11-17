@@ -6,15 +6,14 @@ void listener(const char *interface, std::unordered_map<std::string, PairData> &
     char errorBuffer[PCAP_ERRBUF_SIZE];
     pcap_t *handle;
 
-    std::cout << interface << std::endl;
     handle = pcap_open_live(interface, BUFSIZ, 1, 1000, errorBuffer);
 
     if (handle == nullptr)
     {
-        std::string error = "Invalid network interface";
+        std::string error = "Network interface";
         if (errorBuffer[0] != '\0')
         {
-            error += ": " + std::string(errorBuffer);
+            error += " - " + std::string(errorBuffer);
         }
         throw std::runtime_error(error);
     }

@@ -58,13 +58,16 @@ int main(int argc, char **argv)
                              {
             try {
                 getStats(options.order.c_str(), pairs, running);
-            } catch (...) {
+            } catch (const std::runtime_error &e) {
+                std::cout << "Stats exception caught\n";
+                cleanup();
+                fprintf(stderr, "Error: %s\n", e.what());
                 thread_exception = std::current_exception();
                 running = false;
             } });
 
     listener_thread.join();
     stats_thread.join();
-
+    endwin();
     return 0;
 }
