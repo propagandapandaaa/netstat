@@ -1,5 +1,6 @@
 #include "../include/display.h"
 
+/* Convert bytes to their correct orders of magnitude for formatting */
 std::string formatDataRate(double bytes_per_sec)
 {
     const char *units[] = {"B/s", "KB/s", "MB/s", "GB/s"};
@@ -19,6 +20,7 @@ std::string formatDataRate(double bytes_per_sec)
 
 void display(std::vector<PairStats> pairs)
 {
+    /* Params for specifying column width */
     const int IPV6_MAX_LENGTH = 47;
     const int PROTO_WIDTH = 7;
     const int NUM_WIDTH = 10;
@@ -65,9 +67,9 @@ void display(std::vector<PairStats> pairs)
            << std::setw(NUM_WIDTH) << formatDataRate(bytes_recv_per_sec) << "  "
            << std::setw(NUM_WIDTH) << std::fixed << std::setprecision(1) << packets_sent_per_sec << "  "
            << std::setw(NUM_WIDTH) << std::fixed << std::setprecision(1) << packets_recv_per_sec << "  "
-           << std::setw(NUM_WIDTH) << formatDataRate(static_cast<double>(pair.bytes_sent + pair.bytes_recv) / seconds) << "  "
+           << std::setw(NUM_WIDTH) << formatDataRate(static_cast<double>(pair.bytes_sent + pair.bytes_recv)) << "  "
            << std::setw(NUM_WIDTH) << std::fixed << std::setprecision(1)
-           << static_cast<double>(pair.packets_sent + pair.packets_recv) / seconds << "\n";
+           << static_cast<double>(pair.packets_sent + pair.packets_recv) << "\n";
 
         output += ss.str();
     }

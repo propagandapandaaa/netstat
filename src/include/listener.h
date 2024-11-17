@@ -8,6 +8,9 @@
 #include <atomic>
 #include "handler.h"
 
+#define LOOPBACK 0
+#define ETH 1
+
 void listener(const char *interface, std::unordered_map<std::string, PairData> &pairs, std::atomic<bool> &running);
 
 #endif

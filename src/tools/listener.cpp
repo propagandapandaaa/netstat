@@ -6,21 +6,44 @@ void listener(const char *interface, std::unordered_map<std::string, PairData> &
     char errorBuffer[PCAP_ERRBUF_SIZE];
     pcap_t *handle;
 
+    std::cout << interface << std::endl;
     handle = pcap_open_live(interface, BUFSIZ, 1, 1000, errorBuffer);
+
     if (handle == nullptr)
     {
-        std::cerr << "invalid network interface";
+        std::cerr << "invalid network interface\n";
         exit(EXIT_FAILURE);
     }
 
-    while (running)
+    int linktype = pcap_datalink(handle);
+
+    int packets;
+    if (linktype == LOOPBACK)
     {
-        //  (pcap_loop(handle, 0, packetHandler, reinterpret_cast<u_char *>(&pairs)) < 0)
-        if (pcap_dispatch(handle, 1, packetHandler, reinterpret_cast<u_char *>(&pairs)) == -1)
+        while (running)
         {
-            std::cerr << "Error while capturing packets: " << pcap_geterr(handle) << std::endl;
-            pcap_close(handle);
-            exit(EXIT_FAILURE);
+            //  (pcap_loop(handle, 0, packetHandler, reinterpret_cast<u_char *>(&pairs)) < 0)
+            packets = pcap_dispatch(handle, 1000, processLoopbackPacket, reinterpret_cast<u_char *>(&pairs));
+            if (packets == -1)
+            {
+                std::cerr << "Error while capturing packets: " << pcap_geterr(handle) << std::endl;
+                pcap_close(handle);
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+
+    else
+    {
+        while (running)
+        {
+            packets = pcap_dispatch(handle, 1000, packetHandler, reinterpret_cast<u_char *>(&pairs));
+            if (packets == -1)
+            {
+                std::cerr << "Error while capturing packets: " << pcap_geterr(handle) << std::endl;
+                pcap_close(handle);
+                exit(EXIT_FAILURE);
+            }
         }
     }
 
