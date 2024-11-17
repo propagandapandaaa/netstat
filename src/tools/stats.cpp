@@ -245,7 +245,7 @@ void getStats(const char *orderString, std::unordered_map<std::string, PairData>
         }
         else
         {
-            throw std::runtime_error("invalid timing");
+            // throw std::runtime_error("invalid timing");
         }
     }
 }
