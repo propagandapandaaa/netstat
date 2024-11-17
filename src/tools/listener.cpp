@@ -11,8 +11,12 @@ void listener(const char *interface, std::unordered_map<std::string, PairData> &
 
     if (handle == nullptr)
     {
-        std::cerr << "invalid network interface\n";
-        exit(EXIT_FAILURE);
+        std::string error = "Invalid network interface";
+        if (errorBuffer[0] != '\0')
+        {
+            error += ": " + std::string(errorBuffer);
+        }
+        throw std::runtime_error(error);
     }
 
     int linktype = pcap_datalink(handle);

@@ -203,6 +203,8 @@ namespace
 void getStats(const char *orderString, std::unordered_map<std::string, PairData> &pairs, std::atomic<bool> &running)
 {
 
+    // initscr();
+
     std::unordered_map<std::string, PairData> pairs_copy;
     std::unordered_map<std::string, PairData> pairs_persistent;
 

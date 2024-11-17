@@ -6,6 +6,7 @@
 #include <mutex>
 #include <thread>
 #include <atomic>
+#include <stdexcept>
 #include "handler.h"
 
 #define LOOPBACK 0

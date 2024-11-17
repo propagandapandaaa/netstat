@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+#include <stdexcept>
 
 /* Structure that holds the options */
 typedef struct options
