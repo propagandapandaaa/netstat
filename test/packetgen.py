@@ -3,17 +3,14 @@ import time
 import sys
 
 def send_test_packets():
-    # Create UDP socket
     udp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     
-    # Define loopback address and port
     LOOPBACK_IP = '127.0.0.1'
     UDP_PORT = 12345
 
-    # Calculate parameters for 10MB over 10 seconds
-    TOTAL_BYTES = 10 * 1024 * 1024  # 10 MB in bytes
-    DURATION = 10  # seconds
-    PACKETS_PER_SECOND = 1000  # sending 1000 packets per second
+    TOTAL_BYTES = 10 * 1024 * 1024  # 10 MB 
+    DURATION = 10
+    PACKETS_PER_SECOND = 1000
     BYTES_PER_SECOND = TOTAL_BYTES / DURATION
     PACKET_SIZE = int(BYTES_PER_SECOND / PACKETS_PER_SECOND)
 
@@ -36,7 +33,6 @@ def send_test_packets():
                 packets_sent += 1
                 bytes_sent += PACKET_SIZE
 
-                # Small sleep to prevent overwhelming the system
                 time.sleep(1/PACKETS_PER_SECOND)
 
         elapsed_time = time.time() - start_time
