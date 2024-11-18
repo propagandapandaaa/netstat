@@ -1,3 +1,9 @@
+/*
+Author
+Name: Daniel Jacobs
+Login: xjacob00
+*/
+
 #ifndef LOCKS_H
 #define LOCKS_H
 

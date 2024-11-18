@@ -1,3 +1,9 @@
+/*
+Author
+Name: Daniel Jacobs
+Login: xjacob00
+*/
+
 #ifndef HANDLER_H
 #define HANDLER_H
 

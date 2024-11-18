@@ -1,3 +1,9 @@
+/*
+Author
+Name: Daniel Jacobs
+Login: xjacob00
+*/
+
 #include "../include/stats.h"
 
 namespace
@@ -136,7 +142,6 @@ namespace
     /* Sorts pairs by packet count or bytes, set by the order param */
     std::vector<PairStats> orderData(std::vector<PairStats> &pairs, OrderBy order)
     {
-        // std::vector<PairStats> orderedStats;
         std::sort(pairs.rbegin(), pairs.rend(),
                   [order](const PairStats &a, const PairStats &b)
                   {

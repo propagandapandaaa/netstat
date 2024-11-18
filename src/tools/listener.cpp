@@ -1,3 +1,9 @@
+/*
+Author
+Name: Daniel Jacobs
+Login: xjacob00
+*/
+
 #include "../include/listener.h"
 
 /* Reads packets from buffer and calls handler function */

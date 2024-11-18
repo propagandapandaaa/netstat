@@ -1,3 +1,9 @@
+/*
+Author
+Name: Daniel Jacobs
+Login: xjacob00
+*/
+
 #ifndef DISPLAY_H
 #define DISPLAY_H
 

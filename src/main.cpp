@@ -1,3 +1,9 @@
+/*
+Author
+Name: Daniel Jacobs
+Login: xjacob00
+*/
+
 #include "./include/options.h"
 #include "./include/listener.h"
 #include "./include/stats.h"
@@ -7,7 +13,6 @@ std::atomic<bool> running(true);
 
 void cleanup() noexcept
 {
-    std::cout << "Cleaning up\n";
     endwin();
 }
 
@@ -23,7 +28,6 @@ std::mutex pair_lock;
 
 int main(int argc, char **argv)
 {
-
     struct sigaction sa;
     sa.sa_handler = signalHandler;
     sigemptyset(&sa.sa_mask);
@@ -37,34 +41,31 @@ int main(int argc, char **argv)
     parseArgs(argc, argv, &options);
 
     std::unordered_map<std::string, PairData> pairs;
-    std::exception_ptr thread_exception;
     initscr();
 
     /* Listens to incoming packets, adds them to hashmap */
-    std::thread listener_thread([&options, &pairs, &thread_exception]()
+    std::thread listener_thread([&options, &pairs]()
                                 {
-            try {
-                listener(options.interface.c_str(), pairs, running);
-            } catch (const std::runtime_error &e) {
-                std::cout << "Listener exception caught\n";
-                cleanup();
-                fprintf(stderr, "Error: %s\n", e.what());
-                thread_exception = std::current_exception();
-                running = false;
-            } });
+        try {
+            listener(options.interface.c_str(), pairs, running);
+        } catch (const std::runtime_error &e) {
+            std::cout << "Listener thread exception caught\n";
+            cleanup();
+            fprintf(stderr, "Error: %s\n", e.what());
+            running = false;
+        } });
 
     /* Creates and displays statistics taken from the unordered hashmap */
-    std::thread stats_thread([&options, &pairs, &thread_exception]()
+    std::thread stats_thread([&options, &pairs]()
                              {
-            try {
-                getStats(options.order.c_str(), pairs, running);
-            } catch (const std::runtime_error &e) {
-                std::cout << "Stats exception caught\n";
-                cleanup();
-                fprintf(stderr, "Error: %s\n", e.what());
-                thread_exception = std::current_exception();
-                running = false;
-            } });
+        try {
+            getStats(options.order.c_str(), pairs, running);
+        } catch (const std::runtime_error &e) {
+            std::cout << "Stats thread exception caught\n";
+            cleanup();
+            fprintf(stderr, "Error: %s\n", e.what());
+            running = false;
+        } });
 
     listener_thread.join();
     stats_thread.join();

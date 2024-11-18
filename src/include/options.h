@@ -1,3 +1,9 @@
+/*
+Author
+Name: Daniel Jacobs
+Login: xjacob00
+*/
+
 #ifndef OPTIONS_H
 #define OPTIONS_H
 
