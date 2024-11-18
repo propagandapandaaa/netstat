@@ -19,6 +19,87 @@ namespace
         }
     }
 
+    void getProtocolInfo(const u_char *transport_header, uint8_t protocol_type,
+                         u_int16_t &src_port, u_int16_t &dst_port)
+    {
+        switch (protocol_type)
+        {
+        case IPPROTO_TCP:
+        {
+            struct tcphdr *tcp_header = (struct tcphdr *)transport_header;
+            src_port = ntohs(tcp_header->th_sport);
+            dst_port = ntohs(tcp_header->th_dport);
+            break;
+        }
+        case IPPROTO_UDP:
+        {
+            struct udphdr *udp_header = (struct udphdr *)transport_header;
+            src_port = ntohs(udp_header->uh_sport);
+            dst_port = ntohs(udp_header->uh_dport);
+            break;
+        }
+        case IPPROTO_ICMP:
+        {
+            src_port = 0;
+            dst_port = 0;
+            break;
+        }
+        case IPPROTO_ICMPV6:
+        {
+            src_port = 0;
+            dst_port = 0;
+            break;
+        }
+        default:
+        {
+            src_port = 0;
+            dst_port = 0;
+            break;
+        }
+        }
+    }
+
+    std::string formatConnectionString(const char *src_ip, const char *dst_ip,
+                                       u_int16_t src_port, u_int16_t dst_port,
+                                       const std::string &protocol, bool is_ipv6)
+    {
+        char connection_string[128];
+
+        std::string proto_lower = protocol;
+        std::transform(proto_lower.begin(), proto_lower.end(), proto_lower.begin(),
+                       [](unsigned char c)
+                       { return std::tolower(c); });
+
+        if (protocol == "icmp" || protocol == "icmpv6")
+        {
+            if (is_ipv6)
+            {
+                snprintf(connection_string, sizeof(connection_string), "[%s]_[%s]_%s",
+                         src_ip, dst_ip, protocol.c_str());
+            }
+            else
+            {
+                snprintf(connection_string, sizeof(connection_string), "%s_%s_%s",
+                         src_ip, dst_ip, protocol.c_str());
+            }
+        }
+        else
+        {
+            if (is_ipv6)
+            {
+                snprintf(connection_string, sizeof(connection_string), "[%s]:%d_[%s]:%d_%s",
+                         src_ip, src_port, dst_ip, dst_port, protocol.c_str());
+            }
+            else
+            {
+                snprintf(connection_string, sizeof(connection_string), "%s:%d_%s:%d_%s",
+                         src_ip, src_port, dst_ip, dst_port, protocol.c_str());
+            }
+        }
+
+        return std::string(connection_string);
+    }
+
     void updatePairStats(std::unordered_map<std::string, PairData> *pairs,
                          const std::string &connection_string,
                          const uint32_t packet_length)
@@ -51,7 +132,6 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
 
     char src_ip[INET6_ADDRSTRLEN];
     char dst_ip[INET6_ADDRSTRLEN];
-    char connection_string[128];
 
     std::string protocol;
 
@@ -74,8 +154,13 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
 
         protocol = getProtocol(ip_header->ip_p);
 
-        snprintf(connection_string, sizeof(connection_string), "%s:%d_%s:%d_%s",
-                 src_ip, src_port, dst_ip, dst_port, protocol.c_str());
+        int ip_header_len = ip_header->ip_hl * 4;
+        const u_char *transport_header = packet + sizeof(struct ether_header) + ip_header_len;
+        getProtocolInfo(transport_header, ip_header->ip_p, src_port, dst_port);
+
+        std::string connection_string = formatConnectionString(
+            src_ip, dst_ip, src_port, dst_port, protocol, false);
+
         updatePairStats(pairs, connection_string, pkthdr->len);
         break;
     }
@@ -93,8 +178,12 @@ void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_c
 
         protocol = getProtocol(ip6_header->ip6_nxt);
 
-        snprintf(connection_string, sizeof(connection_string), "[%s]:%d_[%s]:%d_%s",
-                 src_ip, src_port, dst_ip, dst_port, protocol.c_str());
+        const u_char *transport_header = packet + sizeof(struct ether_header) + sizeof(struct ip6_hdr);
+        getProtocolInfo(transport_header, ip6_header->ip6_nxt, src_port, dst_port);
+
+        std::string connection_string = formatConnectionString(
+            src_ip, dst_ip, src_port, dst_port, protocol, true);
+
         updatePairStats(pairs, connection_string, pkthdr->len);
         break;
     }
