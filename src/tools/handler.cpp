@@ -19,8 +19,8 @@ namespace
         }
     }
 
-    void getProtocolInfo(const u_char *transport_header, uint8_t protocol_type,
-                         u_int16_t &src_port, u_int16_t &dst_port)
+    void getPorts(const u_char *transport_header, uint8_t protocol_type,
+                  u_int16_t &src_port, u_int16_t &dst_port)
     {
         switch (protocol_type)
         {
@@ -59,9 +59,13 @@ namespace
         }
     }
 
-    std::string formatConnectionString(const char *src_ip, const char *dst_ip,
-                                       u_int16_t src_port, u_int16_t dst_port,
-                                       const std::string &protocol, bool is_ipv6)
+    /*  This function takes all the extracted information from the packet
+        and merges it into one "connection string" that is then used as
+        a unique identifier for each connection. The connection string
+        acts as a key in the hashmap containig all connections. */
+    std::string getConnectionString(const char *src_ip, const char *dst_ip,
+                                    u_int16_t src_port, u_int16_t dst_port,
+                                    const std::string &protocol, bool is_ipv6)
     {
         char connection_string[128];
 
@@ -100,6 +104,8 @@ namespace
         return std::string(connection_string);
     }
 
+    /*  This function updates each packets statistics or adds a new packet
+        if it doesn't already exist in the hashmap. */
     void updatePairStats(std::unordered_map<std::string, PairData> *pairs,
                          const std::string &connection_string,
                          const uint32_t packet_length)
@@ -123,92 +129,38 @@ namespace
 
 /*  USES: lock_guard(pair_lock)
     Adds new packets to pairs hashmap, if pair exists, bytes and packet count is incremented */
-void packetHandler(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet)
+void packetHandler(u_char *listenerData, const struct pcap_pkthdr *pkthdr, const u_char *packet)
 {
-    auto *pairs = reinterpret_cast<std::unordered_map<std::string, PairData> *>(userData);
-    struct ether_header *eth_header = (struct ether_header *)packet;
+    auto *data = reinterpret_cast<ListenerData *>(listenerData);
+    auto *pairs = data->pairs;
+    bool is_loopback = data->is_loopback;
 
-    struct tcphdr *packet_header; // FIX SO THAT IT SUPPORTS OTHER PROTOCOLS
+    // auto *pairs = reinterpret_cast<std::unordered_map<std::string, PairData> *>(userData);
 
     char src_ip[INET6_ADDRSTRLEN];
     char dst_ip[INET6_ADDRSTRLEN];
-
-    std::string protocol;
-
-    u_int16_t src_port, dst_port;
-
-    switch (ntohs(eth_header->ether_type))
-    {
-    /* IPV4 */
-    case ETH_P_IP:
-    {
-
-        struct ip *ip_header = (struct ip *)(packet + sizeof(struct ether_header));
-        inet_ntop(AF_INET, &(ip_header->ip_src), src_ip, INET_ADDRSTRLEN);
-        inet_ntop(AF_INET, &(ip_header->ip_dst), dst_ip, INET_ADDRSTRLEN);
-
-        packet_header = (struct tcphdr *)(packet + sizeof(struct ether_header) + sizeof(struct ip));
-
-        src_port = ntohs(packet_header->th_sport);
-        dst_port = ntohs(packet_header->th_dport);
-
-        protocol = getProtocol(ip_header->ip_p);
-
-        int ip_header_len = ip_header->ip_hl * 4;
-        const u_char *transport_header = packet + sizeof(struct ether_header) + ip_header_len;
-        getProtocolInfo(transport_header, ip_header->ip_p, src_port, dst_port);
-
-        std::string connection_string = formatConnectionString(
-            src_ip, dst_ip, src_port, dst_port, protocol, false);
-
-        updatePairStats(pairs, connection_string, pkthdr->len);
-        break;
-    }
-
-    /* IPV6 */
-    case ETH_P_IPV6:
-    {
-        struct ip6_hdr *ip6_header = (struct ip6_hdr *)(packet + sizeof(struct ether_header));
-        inet_ntop(AF_INET6, &(ip6_header->ip6_src), src_ip, INET6_ADDRSTRLEN);
-        inet_ntop(AF_INET6, &(ip6_header->ip6_dst), dst_ip, INET6_ADDRSTRLEN);
-
-        packet_header = (struct tcphdr *)(packet + sizeof(struct ether_header) + sizeof(struct ip6_hdr));
-        src_port = ntohs(packet_header->th_sport);
-        dst_port = ntohs(packet_header->th_dport);
-
-        protocol = getProtocol(ip6_header->ip6_nxt);
-
-        const u_char *transport_header = packet + sizeof(struct ether_header) + sizeof(struct ip6_hdr);
-        getProtocolInfo(transport_header, ip6_header->ip6_nxt, src_port, dst_port);
-
-        std::string connection_string = formatConnectionString(
-            src_ip, dst_ip, src_port, dst_port, protocol, true);
-
-        updatePairStats(pairs, connection_string, pkthdr->len);
-        break;
-    }
-    default:
-    {
-        /* Unsupported type, skip */
-        break;
-    }
-    }
-}
-
-void processLoopbackPacket(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet)
-{
-    auto *pairs = reinterpret_cast<std::unordered_map<std::string, PairData> *>(userData);
-
-    /* skip ETH header, loopback doesnt need */
-    const u_char *ip_packet = packet + 4;
-
-    char src_ip[INET6_ADDRSTRLEN];
-    char dst_ip[INET6_ADDRSTRLEN];
-    char connection_string[128];
     std::string protocol;
     u_int16_t src_port, dst_port;
-    struct tcphdr *packet_header;
 
+    /* This is to differentiate between loopback packets and eth packets */
+    const u_char *ip_packet;
+    if (is_loopback)
+    {
+        /* For loopback, skip eth header */
+        ip_packet = packet + 4;
+    }
+    else
+    {
+        struct ether_header *eth_header = (struct ether_header *)packet;
+        uint16_t ether_type = ntohs(eth_header->ether_type);
+        if (ether_type != ETH_P_IP && ether_type != ETH_P_IPV6)
+        {
+            return;
+        }
+        ip_packet = packet + sizeof(struct ether_header);
+    }
+
+    /* Extract IP version, remove header lenght, results in 4 for ipv4 and 6 for ipv6 */
     uint8_t ip_version = (*ip_packet >> 4) & 0xf;
 
     switch (ip_version)
@@ -219,13 +171,15 @@ void processLoopbackPacket(u_char *userData, const struct pcap_pkthdr *pkthdr, c
         inet_ntop(AF_INET, &(ip_header->ip_src), src_ip, INET_ADDRSTRLEN);
         inet_ntop(AF_INET, &(ip_header->ip_dst), dst_ip, INET_ADDRSTRLEN);
 
-        packet_header = (struct tcphdr *)(ip_packet + sizeof(struct ip));
-        src_port = ntohs(packet_header->th_sport);
-        dst_port = ntohs(packet_header->th_dport);
         protocol = getProtocol(ip_header->ip_p);
 
-        snprintf(connection_string, sizeof(connection_string), "%s:%d_%s:%d_%s",
-                 src_ip, src_port, dst_ip, dst_port, protocol.c_str());
+        int ip_header_len = ip_header->ip_hl * 4;
+        const u_char *transport_header = ip_packet + ip_header_len;
+        getPorts(transport_header, ip_header->ip_p, src_port, dst_port);
+
+        std::string connection_string = getConnectionString(
+            src_ip, dst_ip, src_port, dst_port, protocol, false);
+
         updatePairStats(pairs, connection_string, pkthdr->len);
         break;
     }
@@ -235,13 +189,14 @@ void processLoopbackPacket(u_char *userData, const struct pcap_pkthdr *pkthdr, c
         inet_ntop(AF_INET6, &(ip6_header->ip6_src), src_ip, INET6_ADDRSTRLEN);
         inet_ntop(AF_INET6, &(ip6_header->ip6_dst), dst_ip, INET6_ADDRSTRLEN);
 
-        packet_header = (struct tcphdr *)(ip_packet + sizeof(struct ip6_hdr));
-        src_port = ntohs(packet_header->th_sport);
-        dst_port = ntohs(packet_header->th_dport);
         protocol = getProtocol(ip6_header->ip6_nxt);
 
-        snprintf(connection_string, sizeof(connection_string), "[%s]:%d_[%s]:%d_%s",
-                 src_ip, src_port, dst_ip, dst_port, protocol.c_str());
+        const u_char *transport_header = ip_packet + sizeof(struct ip6_hdr);
+        getPorts(transport_header, ip6_header->ip6_nxt, src_port, dst_port);
+
+        std::string connection_string = getConnectionString(
+            src_ip, dst_ip, src_port, dst_port, protocol, true);
+
         updatePairStats(pairs, connection_string, pkthdr->len);
         break;
     }

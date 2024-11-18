@@ -33,7 +33,13 @@ struct PairData
     int seconds; // amount of seconds in the system to calculate data flow per second
 };
 
+/* Structure for passing data from the listener to the handler */
+struct ListenerData
+{
+    std::unordered_map<std::string, PairData> *pairs;
+    bool is_loopback;
+};
+
 void packetHandler(u_char *userData, const pcap_pkthdr *pkthdr, const u_char *packet);
-void processLoopbackPacket(u_char *userData, const struct pcap_pkthdr *pkthdr, const u_char *packet);
 
 #endif

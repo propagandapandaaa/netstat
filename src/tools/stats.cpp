@@ -202,14 +202,19 @@ namespace
 /* Timer function, gets packets once per second and processes them */
 void getStats(const char *orderString, std::unordered_map<std::string, PairData> &pairs, std::atomic<bool> &running)
 {
+    // Copy of pairs so that the mutex doesn't lock the original pairs for too long
     std::unordered_map<std::string, PairData> pairs_copy;
+
+    // Persistent map of pairs, connection pairs get removed after n cycles (specified by DEFAULT_TIMEOUT)
     std::unordered_map<std::string, PairData> pairs_persistent;
 
     /* Wait for the first batch of packets */
     std::this_thread::sleep_for(std::chrono::seconds(1));
 
-    OrderBy order = setOrder(orderString);
+    // Amount of cycles of inactivity it takes to remove a connection from the display
     const int DEFAULT_TIMEOUT = 5;
+
+    OrderBy order = setOrder(orderString);
 
     while (running)
     {
@@ -233,7 +238,7 @@ void getStats(const char *orderString, std::unordered_map<std::string, PairData>
 
         display(pair_stats);
 
-        /* Accounts for processing time of the packets */
+        /* This section of the timer accounts for the processing time of the packets */
         const auto end = std::chrono::high_resolution_clock::now();
         const std::chrono::duration<double, std::milli> elapsed = end - start;
 
@@ -245,6 +250,10 @@ void getStats(const char *orderString, std::unordered_map<std::string, PairData>
         }
         else
         {
+            /*  This is left empty because sometimes at larger packet volumes
+                this condition can occur and throwing a runtime error stops the
+                whole program. For now it is handled by ignoring this issue */
+
             // throw std::runtime_error("invalid timing");
         }
     }
