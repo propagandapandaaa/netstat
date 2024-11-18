@@ -27,7 +27,7 @@ $(BUILD_DIR)/tools/%.o: $(TOOLS_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean_objects:
-	rm -f $(BUILD_DIR)/*.o $(BUILD_DIR)/tools/*.o  # Clear object files
+	rm -f $(BUILD_DIR)/*.o $(BUILD_DIR)/tools/*.o
 
 clean:
 	rm -rf $(BUILD_DIR) $(TARGET)
