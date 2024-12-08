@@ -65,6 +65,9 @@
         "execution": "cpp",
         "charconv": "cpp",
         "__tree": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "iomanip": "cpp",
+        "thread": "cpp",
+        "csignal": "cpp"
     }
 }
